@@ -1,0 +1,163 @@
+\documentclass[11pt]{article} 
+
+\usepackage[margin=1.5in]{geometry}
+\usepackage{multicol}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage{booktabs}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{sectsty}
+\allsectionsfont{\normalfont\sffamily\bfseries}
+
+\usepackage{siunitx}
+\usepackage[font=sf]{caption}
+\usepackage[font=sf]{floatrow}
+\usepackage{titlesec}
+\usepackage{lipsum}
+\usepackage{etoolbox}
+\usepackage{graphicx}
+\usepackage{enumitem}
+\usepackage{wrapfig}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{defs}
+\lstset{
+basicstyle=\small\ttfamily,
+columns=flexible,
+breaklines=true
+}
+
+\pagestyle{fancy}
+\lhead{\sffamily 102b MATLAB Intro}
+
+\setlength\parindent{0in}
+\usepackage[utf8]{inputenc}
+
+\def\sc{\begin{quote}\begin{lstlisting}}
+\def\ec{\end{lstlisting}\end{quote}}
+\def\tt#1{{\ttfamily #1}}
+\linespread{1}
+\begin{document}
+
+
+
+\subsection{Creating signals as arrays}
+
+By creating a time array, and then passing that vector to a function such as {\ttfamily sin()}, we can apply that function to each elemnt in our time array. For example:
+\sc
+time = 0:.001:1;
+sig = sin(2*pi*time);
+plot(time,sig)
+\end{lstlisting}
+\end{quote}
+
+In this case, we made time be from 0 to 1, in increments of 0.001. We then made a sine wave on this interval, and plotted it. The plot shows
+
+\ig{.5}{1.png}
+
+Note that while this looks like a continuous sine wave, since it is in a computer it is discrete. However, since the rate is so high, it approximates continuous time well.
+
+Lets make another sine wave, over a longer interval, that we can play on our computer speakers.
+\sc
+time = (0:8192) / 8192;
+tone1 = sin(2*pi*400*time);
+sound(tone1,8192);
+\end{lstlisting}
+\end{quote}
+
+We constructed a new time vector, that represents time in seconds, sampled at 8192Hz. This is chosen as that is a standard way to represent sound on a computer. \tt{tone1} is a sin wave at 400Hz, sampled at 8192Hz. the \tt{sound} function will play the signal over the computer speakers.
+
+\subsection{Fourier Transforms}
+
+Using the last example, we can now take a look at the spectrum of a sin wave.
+
+\sc
+spec = fft(tone1);
+spec_centered = fftshift(spec);
+freqs = -8192/2:8192/2;
+plot(freqs,abs(spec_centered));
+\end{lstlisting}
+\end{quote}
+
+\tt{fft} computes the Discrete Fourier Transform on our signal \tt{tone}. However, since our sampling rate is high, this approximates a Continuous Time Fourier Transform. It returns an array that is the same length as the input. \\
+
+\tt{fftshift} is an additional function that is used to shift the array returned by \tt{fft} such that the negative frequencies are on the left, the positive frequencies are on the right, and 0 is in the middle. \\
+
+\tt{freqs} is simply an array that gives the frequencies in Hz corresponding to the elements of \tt{spec\_centered}. \\
+
+Lastly, we call \tt{abs} on \tt{spec\_centered} so that we plot the magnitude. The plot we obtain is:
+
+\ig{.7}{2.png}
+
+Here we see two ``impulses'' at -400Hz and 400Hz, as we should for a sine wave at 400Hz. Note that they do not actually go to infinity, but this is approximate as everything is actually being done in discrete time.
+
+Lets do another example, with sinc, instead.
+
+\sc
+time = (-4096:4096) / 8192;
+sig = sinc(2*1000*time);
+spec = fft(sig);
+spec_centered = fftshift(spec);
+freqs = -8192/2:8192/2;
+plot(freqs,abs(spec_centered));
+\end{lstlisting}
+\end{quote}
+
+Note that this time we start \tt{time} at a negative value, so that time 0 is in the center. Also, we chose a frequency of 1000Hz to be the cutoff. There is no $\pi$ this time, due to MATLAB's definition of sinc.\\
+
+The resulting plot is: 
+
+\ig{.7}{3.png}
+
+\subsection{Window Functions}
+
+In this course we often use window functions to reduce things like gibbs phenomena in our signals.
+
+The \tt{hann(N)} function returns an \tt{N}-length array of the hann window, shown below.
+
+\sc
+h = hann(8193)';
+plot(h)
+\end{lstlisting}
+\end{quote}
+
+\ig{.7}{4.png}
+
+Note that we used the \tt{'} opperator to take the transpose of the array, as \tt{hann(N)} returns an $N \times 1$ array, and we want $1 \times N$.\\
+
+Here is a simple example building off of the previous sinc example, but with a hanning window used.
+
+\sc
+time = (-4096:4096) / 8192;
+sig = sinc(2*1000*time);
+spec = fft(sig .*h );
+spec_centered = fftshift(spec);
+freqs = -8192/2:8192/2;
+plot(freqs,abs(spec_centered));
+\end{lstlisting}
+\end{quote}
+
+\ig{.7}{5.png}
+
+
+\end{document}
+
+MATLAB is a scripting language and is very commonly used tool for any numerical computation, visualization, and programming. Here we provide a basic introduction to MATLAB that will be useful for completing your programming assignments. 
+
+\subsection{Intro}
+\begin{itemize}
+\item Basic variable type is a matrix:
+
+\ig{.5}{s1.png}
+
+The column entries are separated by spaces or commas (,) while ; is used to separate rows in the matrix definition. If there is only one element in the matrix, it is a scalar variable. If there is only one row or one column, the matrix is called vector. Signals are often defined as vectors. Another way to define a vector is by using the colon (:) operator:
+
+\ig{.5}{s2.png}
+
+Here the vector is generated starting at 1 with the difference between each element as 2 up until 10 is reached. The default middle value, called skip parameter, is optional and default value is 1.
+
+\item Size and length: 
+\end{itemize}
